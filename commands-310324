@@ -1,0 +1,70 @@
+docker version
+kind version
+kind create cluster --help
+kind create cluster
+docker ps
+kubectl get node
+docker ps
+vi $HOME/.kube/config
+zed $HOME/.kube/config
+nvim $HOME/.kube/config
+kubectl get node
+kubectl get node -o wide
+kubectl get node
+kubectl run nginx --image=nginx
+kubectl get pod
+kubectl get pod -o wide
+kubectl get node
+kubectl describe pod nginx
+kind-control-plane
+kubectl delete pod nginx
+kind delete cluster
+kubectl get node
+docker ps
+vi kind-config.yaml
+cat kind-config.yaml
+kind create cluster --config kind-config.yaml
+kubectl get node
+kubectl get node -o wide
+docker ps
+kubectl run nginx --image=nginx
+kubectl get node -o wide
+kubectl get pod -o wide
+kubectl run db --image=redis
+kubectl get pod
+kubectl get pod -o wide
+kubectl run redisdb --image=redis
+kubectl get pod -o wide
+kubectl run redis --image=redis -v=10
+docker ps
+docker logs kind-control-plane
+docker exec -it kind-control-plane
+docker exec -it kind-control-plane bash
+kubectl get pod
+kubectl get pod -A
+kubectl get pod -A -o wide
+kubectl logs kube-apiserver-kind-control-plane -n kube-system
+kubectl get pod -A -o wide
+kubectl logs kube-scheduler-kind-control-plane
+kubectl logs kube-scheduler-kind-control-plane -n kube-system
+kubectl get pod
+kubectl run redis --image=redis --dry-run=client -o yaml
+kubectl run redis --image=redis --dry-run=client -o yaml > pod.yaml
+vi pod.yaml
+kubectl create -f pod.yaml
+kubectl get pod
+kubectl delete pod redis
+kubectl get pod
+kubectl create -f pod.yaml
+kubectl get pod
+kubectl run redis --image=redis --dry-run=client -o yaml
+kubectl run redis --image=redis --dry-run=client -o json
+kubectl run redis --image=redis --dry-run=client -o yaml > pod.yaml
+vi pod.yaml
+kubectl get pod
+kubectl get pod redis
+kubectl get pod redis -o yaml
+kubectl get pod redis -o yaml > pod-output.yaml
+vi pod-output.yaml
+kubectl get pod
+kubectl get pod -o wide
