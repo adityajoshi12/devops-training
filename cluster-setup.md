@@ -34,7 +34,6 @@ This will create a single-node Kubernetes cluster with the default configuration
  - role: control-plane
  - role: worker
  - role: worker
- kubernetesVersion: v1.25.0
 ```
 
 
