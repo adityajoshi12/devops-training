@@ -676,6 +676,287 @@ cat var8 # will show val8
 
 
 
+## Secrets
+
+kubernetes.io > Documentation > Concepts > Configuration > [Secrets](https://kubernetes.io/docs/concepts/configuration/secret/)
+
+kubernetes.io > Documentation > Tasks > Inject Data Into Applications > [Distribute Credentials Securely Using Secrets](https://kubernetes.io/docs/tasks/inject-data-application/distribute-credentials-secure/)
+
+### Create a secret called mysecret with the values password=mypass
+
+<details><summary>show</summary>
+<p>
+
+```bash
+kubectl create secret generic mysecret --from-literal=password=mypass
+```
+
+</p>
+</details>
+
+### Create a secret called mysecret2 that gets key/value from a file
+
+Create a file called username with the value admin:
+
+```bash
+echo -n admin > username
+```
+
+<details><summary>show</summary>
+<p>
+
+```bash
+kubectl create secret generic mysecret2 --from-file=username
+```
+
+</p>
+</details>
+
+### Get the value of mysecret2
+
+<details><summary>show</summary>
+<p>
+
+```bash
+kubectl get secret mysecret2 -o yaml
+echo -n YWRtaW4= | base64 -d # on MAC it is -D, which decodes the value and shows 'admin'
+```
+
+Alternative using `--jsonpath`:
+
+```bash
+kubectl get secret mysecret2 -o jsonpath='{.data.username}' | base64 -d  # on MAC it is -D
+```
+
+Alternative using `--template`:
+
+```bash
+kubectl get secret mysecret2 --template '{{.data.username}}' | base64 -d  # on MAC it is -D
+```
+
+Alternative using `jq`:
+
+```bash
+kubectl get secret mysecret2 -o json | jq -r .data.username | base64 -d  # on MAC it is -D
+```
+
+</p>
+</details>
+
+### Create an nginx pod that mounts the secret mysecret2 in a volume on path /etc/foo
+
+<details><summary>show</summary>
+<p>
+
+```bash
+kubectl run nginx --image=nginx --restart=Never -o yaml --dry-run=client > pod.yaml
+vi pod.yaml
+```
+
+```YAML
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: nginx
+  name: nginx
+spec:
+  volumes: # specify the volumes
+  - name: foo # this name will be used for reference inside the container
+    secret: # we want a secret
+      secretName: mysecret2 # name of the secret - this must already exist on pod creation
+  containers:
+  - image: nginx
+    imagePullPolicy: IfNotPresent
+    name: nginx
+    resources: {}
+    volumeMounts: # our volume mounts
+    - name: foo # name on pod.spec.volumes
+      mountPath: /etc/foo #our mount path
+  dnsPolicy: ClusterFirst
+  restartPolicy: Never
+status: {}
+```
+
+```bash
+kubectl create -f pod.yaml
+kubectl exec -it nginx -- /bin/bash
+ls /etc/foo  # shows username
+cat /etc/foo/username # shows admin
+```
+
+</p>
+</details>
+
+### Delete the pod you just created and mount the variable 'username' from secret mysecret2 onto a new nginx pod in env variable called 'USERNAME'
+
+<details><summary>show</summary>
+<p>
+
+```bash
+kubectl delete po nginx
+kubectl run nginx --image=nginx --restart=Never -o yaml --dry-run=client > pod.yaml
+vi pod.yaml
+```
+
+```YAML
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: nginx
+  name: nginx
+spec:
+  containers:
+  - image: nginx
+    imagePullPolicy: IfNotPresent
+    name: nginx
+    resources: {}
+    env: # our env variables
+    - name: USERNAME # asked name
+      valueFrom:
+        secretKeyRef: # secret reference
+          name: mysecret2 # our secret's name
+          key: username # the key of the data in the secret
+  dnsPolicy: ClusterFirst
+  restartPolicy: Never
+status: {}
+```
+
+```bash
+kubectl create -f pod.yaml
+kubectl exec -it nginx -- env | grep USERNAME | cut -d '=' -f 2 # will show 'admin'
+```
+
+</p>
+</details>
+
+### Create a Secret named 'ext-service-secret' in the namespace 'secret-ops'. Then, provide the key-value pair API_KEY=LmLHbYhsgWZwNifiqaRorH8T as literal.
+
+<details><summary>show</summary>
+<p>
+
+```bash
+export ns="-n secret-ops"
+export do="--dry-run=client -oyaml"
+k create secret generic ext-service-secret --from-literal=API_KEY=LmLHbYhsgWZwNifiqaRorH8T $ns $do > sc.yaml
+k apply -f sc.yaml
+```
+
+</p>
+</details>
+
+### Consuming the Secret. Create a Pod named 'consumer' with the image 'nginx' in the namespace 'secret-ops' and consume the Secret as an environment variable. Then, open an interactive shell to the Pod, and print all environment variables.
+<details><summary>show</summary>
+<p>
+
+```bash
+export ns="-n secret-ops"
+export do="--dry-run=client -oyaml"
+k run consumer --image=nginx $ns $do > nginx.yaml
+vi nginx.yaml
+```
+
+```YAML
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: consumer
+  name: consumer
+  namespace: secret-ops
+spec:
+  containers:
+  - image: nginx
+    name: consumer
+    resources: {}
+    env:
+    - name: API_KEY
+      valueFrom:
+        secretKeyRef:
+          name: ext-service-secret
+          key: API_KEY
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
+```
+
+```bash
+k exec -it $ns consumer -- /bin/sh
+#env
+```
+</p>
+</details>
+
+### Create a Secret named 'my-secret' of type 'kubernetes.io/ssh-auth' in the namespace 'secret-ops'. Define a single key named 'ssh-privatekey', and point it to the file 'id_rsa' in this directory.
+<details><summary>show</summary>
+<p>
+
+```bash
+#Tips, export to variable
+export do="--dry-run=client -oyaml"
+export ns="-n secret-ops"
+
+#if id_rsa file didn't exist.
+ssh-keygen
+
+k create secret generic my-secret $ns --type="kubernetes.io/ssh-auth" --from-file=ssh-privatekey=id_rsa $do > sc.yaml
+k apply -f sc.yaml
+```
+</p>
+</details>
+
+### Create a Pod named 'consumer' with the image 'nginx' in the namespace 'secret-ops', and consume the Secret as Volume. Mount the Secret as Volume to the path /var/app with read-only access. Open an interactive shell to the Pod, and render the contents of the file.
+<details><summary>show</summary>
+<p>
+
+```bash
+#Tips, export to variable
+export ns="-n secret-ops"
+export do="--dry-run=client -oyaml"
+k run consumer --image=nginx $ns $do > nginx.yaml
+vi nginx.yaml
+```
+
+```YAML
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: consumer
+  name: consumer
+  namespace: secret-ops
+spec:
+  containers:
+    - image: nginx
+      name: consumer
+      resources: {}
+      volumeMounts:
+        - name: foo
+          mountPath: "/var/app"
+          readOnly: true
+  volumes:
+    - name: foo
+      secret:
+        secretName: my-secret
+        optional: true
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
+```
+
+```bash
+k exec -it $ns consumer -- /bin/sh
+# cat /var/app/ssh-privatekey
+# exit
+```
+</p>
+</details>
+
 
 **Tools and Tips:**
 
