@@ -1,0 +1,15 @@
+mongo:
+  port: 8080
+  db: 
+    name:
+    password:
+
+backend:
+  image: adityajoshi12/backend-k8s:1.1
+  port: 80
+
+frontend:
+  image: adityajoshi12/frontend-k8s:2.1
+  backend_url: http://backend:8080/api/tasks
+
+namespace: test
