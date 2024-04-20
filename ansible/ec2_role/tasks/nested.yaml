@@ -1,0 +1,18 @@
+- name: Launch EC2 instance
+  ec2_instance:
+    region: { { test.reg } }
+    name: "{{ test.name }}"
+    access_key: "{{ access_key}}"
+    secret_key: "{{ secret_key }}"
+    key_name: "aditya-ec2"
+    instance_type: t2.micro
+    security_group: default
+    network:
+      assign_public_ip: true
+    image_id: ami-0a1b648e2cd533174
+    tags:
+      Environment: Testing
+  loop: "{{ ec2m }}"
+  when: run != test.name
+  loop_control:
+    loop_var: test

@@ -1,0 +1,24 @@
+# file module example
+- hosts: webservers
+  tasks:
+    - name: Create a directory
+      file:
+        path: /path/to/directory
+        state: directory
+        mode: '0755'  
+
+    - name: Create a file
+      file:
+        path: /path/to/file.txt
+        state: touch
+
+    - name: Copy a file
+      file:
+        src: /path/to/source.txt
+        dest: /path/to/destination.txt
+        remote_src: yes
+
+    - name: Remove a file
+      file:
+        path: /path/to/file.txt
+        state: absent

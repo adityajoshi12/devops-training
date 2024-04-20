@@ -1,0 +1,58 @@
+---
+- hosts: localhost
+  gather_facts: no
+  vars:
+    ec2:
+      - name: machine01
+        reg: ap-south-1
+      - name: machine02
+        reg: ap-south-2
+  tasks:
+    # create ec2 machines
+    - name: Launch EC2 instance
+      ec2_instance:
+        region: "{{ test.reg }}"
+        name: "{{ test.name }}"
+        access_key: ""
+        secret_key: ""
+        key_name: "aditya-ec2"
+        instance_type: t2.micro
+        security_group: default
+        network:
+          assign_public_ip: true
+        image_id: ami-0a1b648e2cd533174
+        tags:
+          Environment: Testing
+      register: ec2_instance
+      loop: "{{ ec2_name }}"
+      loop_control:
+        loop_var: test
+
+    - name: print output
+      debug:
+        msg: " {{ ec2_instance.instance_ids }}"
+
+    # Terminate ec2 machine
+    - name: Terminate EC2 instance
+      ec2_instance:
+        state: absent
+        region: "{{ test.reg }}"
+        name: "{{ test.name }}"
+        access_key: ""
+        secret_key: ""
+      register: ec2_termination
+      loop: "{{ ec2_name }}"
+      loop_control:
+        loop_var: test
+
+    - name: print output
+      debug:
+        msg: " {{ ec2_termination }}"
+    
+    # create ec2 machine using ansible role
+    - include_role:
+        name: "ec2_role"
+      vars:
+        ec2_name: "{{ ec2 }}"
+        access_key: ""
+        secret_key: ""

@@ -1,0 +1,18 @@
+---
+ 
+    - ec2_instance_info:
+        access_key: "{{ access_key}}"
+        secret_key: "{{ secret_key }}"
+        region: {{ region }}
+      register: running_instance
+
+    - include_tasks: nested.yaml
+      vars:
+         ec2m: "{{ ec2_name }}"
+         access_key: "{{ access_key }}"
+         secret_key: "{{ secret_key }}"
+         run: "{{ running.tags.Name }}"
+      loop: "{{ running_instance.instances }}"
+      loop_control: 
+        loop_var: running
+
