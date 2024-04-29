@@ -10,3 +10,14 @@ variable "access_key" {
 variable "secret_key" {
   type = string
 }
+
+variable "env" {
+  type        = string
+  description = "environment"
+  default     = "dev"
+}
+
+variable "machine_count" {
+  type    = list(any)
+  default = ["ram", "sam"]
+}
