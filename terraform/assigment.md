@@ -129,7 +129,6 @@ output "webserver_public_ip" {
 *   Provision a virtual network with private subnets in multiple availability zones.
 *   Create a security group for a database server, allowing access only from specific IP ranges or security groups.
 *   Launch two database instances (e.g., MySQL, PostgreSQL) in separate availability zones for redundancy.
-*   Configure replication between the database instances for high availability.
 *   Test the failover mechanism to ensure database availability in case of an instance failure.
 
 <details>
